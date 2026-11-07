@@ -911,6 +911,17 @@ func _exit_tree() -> void:
 	_phantom_camera_manager.pcam_removed(self)
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		# The third-person SpringArm3D is added to the tree, and this node reparented under it,
+		# with deferred calls. If this node is freed before then, e.g. together with its parent
+		# in the frame it became ready, those calls are dropped and nothing ever frees the
+		# SpringArm3D, so it would leak as an orphan node.
+		if is_instance_valid(_follow_spring_arm) and \
+		get_parent() != _follow_spring_arm:
+			_follow_spring_arm.queue_free()
+
+
 func _ready():
 	match follow_mode:
 		FollowMode.THIRD_PERSON:
